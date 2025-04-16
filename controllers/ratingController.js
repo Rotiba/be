@@ -50,7 +50,7 @@ async function rateVideo(req, res) {
     res.status(201).json({ message: "Rating submitted successfully" });
   } catch (error) {
     console.error("Rating error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 }
 

@@ -20,7 +20,7 @@ async function addComment(req, res) {
     res.status(201).json({ message: "Comment added successfully" });
   } catch (error) {
     console.error("Comment error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 }
 

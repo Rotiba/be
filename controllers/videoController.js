@@ -13,7 +13,7 @@ async function getAllVideos(req, res) {
     res.json(videos);
   } catch (error) {
     console.error("Error fetching videos:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 }
 
@@ -58,7 +58,7 @@ async function uploadVideo(req, res) {
     res.status(201).json({ message: "Video uploaded successfully", blobUrl });
   } catch (error) {
     console.error("Upload error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 }
 
