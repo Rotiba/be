@@ -1,4 +1,5 @@
 const { executeSql } = require("../utils/db");
+const { TYPES } = require("tedious"); // Import TYPES from tedious
 
 async function rateVideo(req, res) {
   const videoId = req.params.id;
@@ -54,4 +55,27 @@ async function rateVideo(req, res) {
   }
 }
 
-module.exports = { rateVideo };
+async function getRatings(req, res) {
+  const videoId = req.params.id;
+
+  try {
+    const ratings = await executeSql(
+      `
+        SELECT AVG(CAST(rating AS FLOAT)) as averageRating, COUNT(*) as ratingCount
+        FROM Ratings
+        WHERE videoId = @videoId
+      `,
+      [{ name: "videoId", type: TYPES.Int, value: parseInt(videoId) }]
+    );
+
+    res.json({
+      averageRating: ratings[0].averageRating || 0,
+      ratingCount: ratings[0].ratingCount || 0,
+    });
+  } catch (error) {
+    console.error("Error fetching ratings:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+}
+
+module.exports = { rateVideo, getRatings };

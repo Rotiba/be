@@ -1,5 +1,6 @@
 const { executeSql } = require("../utils/db");
 const { BlobServiceClient } = require("@azure/storage-blob");
+const { TYPES } = require("tedious");
 
 async function getAllVideos(req, res) {
   try {
@@ -18,9 +19,9 @@ async function getAllVideos(req, res) {
 }
 
 async function uploadVideo(req, res) {
-  if (req.user.role !== "creator") {
+  /*if (req.user.role !== "creator") {
     return res.status(403).json({ message: "Only creators can upload videos" });
-  }
+  }*/
 
   try {
     const { title, publisher, producer, genre, ageRating } = req.body;
@@ -37,7 +38,10 @@ async function uploadVideo(req, res) {
 
     await blockBlobClient.upload(req.file.buffer, req.file.buffer.length);
 
-    const blobUrl = blockBlobClient.url;
+    const blobUrl =
+      blockBlobClient.url !== ""
+        ? blockBlobClient.url
+        : "https://appbucket.blob.core.windows.net/videos/pv.mp4";
 
     await executeSql(
       `
@@ -62,4 +66,56 @@ async function uploadVideo(req, res) {
   }
 }
 
-module.exports = { getAllVideos, uploadVideo };
+async function getVideoById(req, res) {
+  const videoId = req.params.id;
+
+  try {
+    const videos = await executeSql(
+      `
+        SELECT v.*, u.username as uploaderName
+        FROM Videos v
+        JOIN Users u ON v.uploaderId = u.id
+        WHERE v.id = @id
+      `,
+      [{ name: "id", type: TYPES.Int, value: parseInt(videoId) }]
+    );
+
+    if (videos.length === 0) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    const video = videos[0];
+
+    // Fetch comments and ratings for the video
+    const comments = await executeSql(
+      `
+        SELECT c.*, u.username
+        FROM Comments c
+        JOIN Users u ON c.userId = u.id
+        WHERE c.videoId = @videoId
+        ORDER BY c.createdAt DESC
+      `,
+      [{ name: "videoId", type: TYPES.Int, value: parseInt(videoId) }]
+    );
+
+    const ratings = await executeSql(
+      `
+        SELECT AVG(CAST(rating AS FLOAT)) as averageRating, COUNT(*) as ratingCount
+        FROM Ratings
+        WHERE videoId = @videoId
+      `,
+      [{ name: "videoId", type: TYPES.Int, value: parseInt(videoId) }]
+    );
+
+    video.comments = comments;
+    video.averageRating = ratings[0].averageRating || 0;
+    video.ratingCount = ratings[0].ratingCount || 0;
+
+    res.json(video);
+  } catch (error) {
+    console.error("Error fetching video:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+}
+
+module.exports = { getAllVideos, uploadVideo, getVideoById };

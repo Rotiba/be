@@ -1,7 +1,7 @@
 const { Connection, Request } = require("tedious");
 
 const sqlConfig = {
-  server: process.env.SQL_SERVER,
+  server: process.env.SQL_SERVER, // Ensure this is correctly set
   authentication: {
     type: "default",
     options: {
@@ -15,6 +15,9 @@ const sqlConfig = {
     trustServerCertificate: false,
   },
 };
+
+// Debugging: Log the SQL configuration
+console.log("SQL Config:", sqlConfig);
 
 async function executeSql(query, params = []) {
   return new Promise((resolve, reject) => {
