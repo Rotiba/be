@@ -25,7 +25,7 @@ async function uploadVideo(req, res) {
 
   try {
     const { title, publisher, producer, genre, ageRating } = req.body;
-
+    /*
     const blobServiceClient = BlobServiceClient.fromConnectionString(
       process.env.STORAGE_CONNECTION_STRING
     );
@@ -41,7 +41,9 @@ async function uploadVideo(req, res) {
     const blobUrl =
       blockBlobClient.url !== ""
         ? blockBlobClient.url
-        : "https://appbucket.blob.core.windows.net/videos/pv.mp4";
+        : "https://appbucket.blob.core.windows.net/videos/pv.mp4";*/
+
+    const blobUrl = "https://appbucket.blob.core.windows.net/videos/pv.mp4";
 
     await executeSql(
       `
